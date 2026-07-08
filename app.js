@@ -60,6 +60,28 @@ function saveMermaid() {
   URL.revokeObjectURL(url);
 }
 
+// Autosave to localStorage
+const STORAGE_KEY = 'mermaid-renderer:diagram';
+
+function saveToLocalStorage() {
+  localStorage.setItem(STORAGE_KEY, editor.value);
+  showToast('Saved');
+}
+
+let toastTimer;
+function showToast(message) {
+  let toast = document.getElementById('toast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'toast';
+    document.body.appendChild(toast);
+  }
+  toast.textContent = message;
+  toast.classList.add('visible');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toast.classList.remove('visible'), 1800);
+}
+
 // Global keyboard shortcuts
 document.addEventListener('keydown', (e) => {
   const mod = e.ctrlKey || e.metaKey;
@@ -74,6 +96,7 @@ document.addEventListener('keydown', (e) => {
 
   if (e.key.toLowerCase() === 's') {
     e.preventDefault();
+    saveToLocalStorage();
     return;
   }
 
@@ -110,8 +133,9 @@ document.addEventListener('mouseup', () => {
   dragging = false;
 });
 
-// Default diagram on load
-editor.value = `graph TD
+// Load saved diagram, else default
+const saved = localStorage.getItem(STORAGE_KEY);
+editor.value = saved !== null ? saved : `graph TD
     A[Start] --> B{Is it working?}
     B -->|Yes| C[Great!]
     B -->|No| D[Debug]
