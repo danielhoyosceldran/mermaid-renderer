@@ -4,12 +4,22 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Mermaid Renderer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=JetBrains+Mono:wght@500;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <div id="toolbar">
-    <button id="btn-open">Open</button>
-    <input id="file-input" type="file" accept=".mmd,.txt" hidden />
+    <div id="toolbar-left" class="toolbar-card">
+      <span class="brand">Mermaid Renderer</span>
+      <button id="btn-open">Open</button>
+      <input id="file-input" type="file" accept=".mmd,.txt" hidden />
+    </div>
+    <div id="toolbar-splitter"></div>
+    <div id="toolbar-right" class="toolbar-card">
+      <span class="hint">Ctrl+S save &middot; Ctrl+Shift+S export &middot; Ctrl+Enter render</span>
+    </div>
   </div>
   <div id="main">
     <div id="left-panel">

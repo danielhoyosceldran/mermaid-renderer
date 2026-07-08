@@ -9,6 +9,7 @@ const btnOpen = document.getElementById('btn-open');
 const fileInput = document.getElementById('file-input');
 const leftPanel = document.getElementById('left-panel');
 const main = document.getElementById('main');
+const toolbarLeft = document.getElementById('toolbar-left');
 
 // Unique ID required by mermaid.render; reuse causes conflicts
 let renderId = 0;
@@ -127,6 +128,7 @@ document.addEventListener('mousemove', (e) => {
     Math.max(150, dragStartWidth + delta)
   );
   leftPanel.style.width = newWidth + 'px';
+  toolbarLeft.style.width = newWidth + 'px';
 });
 
 document.addEventListener('mouseup', () => {
