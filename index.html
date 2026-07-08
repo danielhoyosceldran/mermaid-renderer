@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mermaid Renderer</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="toolbar">
+    <button id="btn-open">Open</button>
+    <input id="file-input" type="file" accept=".mmd,.txt" hidden />
+  </div>
+  <div id="main">
+    <div id="left-panel">
+      <textarea id="editor" spellcheck="false" placeholder="Enter Mermaid diagram code..."></textarea>
+    </div>
+    <div id="splitter"></div>
+    <div id="right-panel">
+      <div id="output"></div>
+    </div>
+  </div>
+  <script type="module" src="app.js"></script>
+</body>
+</html>

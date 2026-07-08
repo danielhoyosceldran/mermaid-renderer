@@ -1,0 +1,85 @@
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  font-family: sans-serif;
+}
+
+#toolbar {
+  flex-shrink: 0;
+  padding: 4px 8px;
+  border-bottom: 1px solid #ccc;
+  background: #f5f5f5;
+}
+
+#toolbar button {
+  padding: 3px 10px;
+  cursor: pointer;
+}
+
+#main {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+}
+
+#left-panel {
+  display: flex;
+  flex-direction: column;
+  width: 40%;
+  min-width: 150px;
+  overflow: hidden;
+}
+
+#editor {
+  flex: 1;
+  resize: none;
+  border: none;
+  outline: none;
+  padding: 8px;
+  font-family: monospace;
+  font-size: 13px;
+  line-height: 1.5;
+  overflow: auto;
+}
+
+#splitter {
+  width: 5px;
+  cursor: col-resize;
+  background: #ccc;
+  flex-shrink: 0;
+}
+
+#splitter:hover {
+  background: #999;
+}
+
+#right-panel {
+  flex: 1;
+  min-width: 150px;
+  overflow: auto;
+  border-left: 1px solid #ccc;
+}
+
+#output {
+  padding: 12px;
+  min-height: 100%;
+  white-space: pre-wrap;
+  font-family: monospace;
+  font-size: 13px;
+  color: #c00;
+}
+
+#output svg {
+  max-width: 100%;
+}
