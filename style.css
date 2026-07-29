@@ -173,6 +173,156 @@ body {
   max-width: 100%;
 }
 
+#btn-settings {
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+#settings-overlay {
+  position: fixed;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: rgba(15, 23, 42, 0.35);
+  backdrop-filter: blur(2px);
+  z-index: 2000;
+}
+
+#settings-overlay.visible {
+  display: flex;
+}
+
+#settings-dialog {
+  display: flex;
+  flex-direction: column;
+  width: min(520px, 92vw);
+  max-height: 85vh;
+  background: var(--tt-surface);
+  border: 1px solid var(--tt-border);
+  border-radius: 1rem;
+  box-shadow: 0 20px 40px rgba(15, 23, 42, 0.25);
+  outline: none;
+}
+
+.settings-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--tt-border-soft);
+}
+
+.settings-header h2 {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.settings-close {
+  border: none;
+  background: none;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  color: var(--tt-text-muted);
+}
+
+.settings-body {
+  overflow: auto;
+  padding: 12px 18px;
+}
+
+.settings-group + .settings-group {
+  margin-top: 18px;
+}
+
+.settings-group h3 {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--tt-text-muted);
+  margin-bottom: 6px;
+}
+
+.settings-group h3 small {
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: 400;
+  color: var(--tt-text-dim);
+}
+
+.settings-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 6px 0;
+  font-size: 13px;
+  color: var(--tt-text-soft);
+  border-bottom: 1px solid var(--tt-border-soft);
+}
+
+.settings-row input[type='number'],
+.settings-row input[type='text'] {
+  width: 72px;
+  padding: 4px 8px;
+  font: inherit;
+  font-size: 12px;
+  text-align: center;
+  border: 1px solid var(--tt-border);
+  border-radius: 0.5rem;
+  background: var(--tt-surface-muted);
+  color: var(--tt-text);
+}
+
+.keybind {
+  min-width: 130px;
+  padding: 4px 10px;
+  cursor: pointer;
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 11px;
+  color: var(--tt-text-soft);
+  background: var(--tt-surface-soft);
+  border: 1px solid var(--tt-border);
+  border-radius: 0.5rem;
+}
+
+.keybind:hover {
+  border-color: var(--tt-accent);
+  color: var(--tt-accent-strong);
+}
+
+.keybind.capturing {
+  background: var(--tt-accent);
+  border-color: var(--tt-accent);
+  color: #fff;
+}
+
+.settings-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 12px 18px;
+  border-top: 1px solid var(--tt-border-soft);
+}
+
+.settings-footer button {
+  padding: 5px 14px;
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+  border-radius: 0.5rem;
+  border: 1px solid var(--tt-border);
+  background: var(--tt-surface-soft);
+  color: var(--tt-text-soft);
+}
+
+.settings-footer .settings-done {
+  background: var(--tt-accent);
+  border-color: var(--tt-accent);
+  color: #fff;
+}
+
 #toast {
   position: fixed;
   bottom: 20px;

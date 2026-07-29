@@ -1,8 +1,11 @@
 import mermaid from './vendor/mermaid/mermaid.esm.min.mjs';
+import { attachEditor, loadSettings } from './editor.js';
+import { createSettingsPanel } from './settings-panel.js';
 
 mermaid.initialize({ startOnLoad: false });
 
 const editor = document.getElementById('editor');
+const btnSettings = document.getElementById('btn-settings');
 const output = document.getElementById('output');
 const splitter = document.getElementById('splitter');
 const btnOpen = document.getElementById('btn-open');
@@ -34,10 +37,25 @@ async function renderDiagram() {
 
 // Hot reload with 400 ms debounce
 let debounceTimer;
-editor.addEventListener('input', () => {
+function scheduleRender() {
   clearTimeout(debounceTimer);
   debounceTimer = setTimeout(renderDiagram, 400);
+}
+editor.addEventListener('input', scheduleRender);
+
+// Code-editor behaviours (indentation, line ops, comments)
+const settings = loadSettings();
+attachEditor(editor, () => settings, scheduleRender);
+applyEditorSettings();
+
+function applyEditorSettings() {
+  editor.style.tabSize = String(settings.tabSize);
+}
+
+const settingsPanel = createSettingsPanel(settings, () => {
+  applyEditorSettings();
 });
+btnSettings.addEventListener('click', () => settingsPanel.open());
 
 // Open .mmd / .txt file
 btnOpen.addEventListener('click', () => fileInput.click());
