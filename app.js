@@ -1,6 +1,7 @@
 import mermaid from './vendor/mermaid/mermaid.esm.min.mjs';
 import { attachEditor, loadSettings } from './editor.js';
 import { createSettingsPanel } from './settings-panel.js';
+import { attachAutocomplete } from './autocomplete.js';
 
 mermaid.initialize({ startOnLoad: false });
 
@@ -42,6 +43,10 @@ function scheduleRender() {
   debounceTimer = setTimeout(renderDiagram, 400);
 }
 editor.addEventListener('input', scheduleRender);
+
+// Autocomplete is attached first so that, while its popup is open, it can claim
+// Tab/Enter/arrows before the editor keymap sees them.
+attachAutocomplete(editor, scheduleRender);
 
 // Code-editor behaviours (indentation, line ops, comments)
 const settings = loadSettings();
