@@ -204,6 +204,7 @@ body {
 .tok-number { color: #ea580c; }
 .tok-bracket { color: var(--tt-text-muted); }
 .tok-comment { color: var(--tt-text-dim); font-style: italic; }
+.tok-br { color: #db2777; font-style: italic; }
 
 #splitter {
   width: 5px;

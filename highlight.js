@@ -37,6 +37,7 @@ function highlightLine(line) {
   // strings, arrows, keywords and numbers, escaping literal text in between.
   const matchers = [
     { re: /"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'/g, cls: 'tok-string' },
+    { re: /<br\s*\/?>/gi, cls: 'tok-br' },
     { re: /(?:<{1,2}-{1,3}>?|-{1,3}>{1,2}|={1,3}>{1,2}|-\.{1,2}->?|\.{1,2}->?|--x|--o|\|\|--|--\|\||o--o|x--x)/g, cls: 'tok-arrow' },
     { re: new RegExp('\\b(?:' + KEYWORDS.map(escapeRe).join('|') + ')\\b', 'g'), cls: 'tok-keyword' },
     { re: /\b\d+(?:\.\d+)?\b/g, cls: 'tok-number' },
