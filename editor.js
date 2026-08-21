@@ -328,6 +328,12 @@ export function attachEditor(textarea, getSettings, onChange) {
       replaceRange(pos - match[0].length, pos, '');
     },
 
+    // Not rebindable: Alt+Enter inserts a Mermaid line-break tag at the caret.
+    insertBr() {
+      const { selectionStart, selectionEnd } = textarea;
+      replaceRange(selectionStart, selectionEnd, '<br>', selectionStart + 4);
+    },
+
     // Not rebindable: plain Enter keeps the current indentation level.
     autoIndentEnter() {
       const s = getSettings();
@@ -360,6 +366,12 @@ export function attachEditor(textarea, getSettings, onChange) {
         }
         return;
       }
+    }
+
+    if (combo === 'alt+enter') {
+      e.preventDefault();
+      commands.insertBr();
+      return;
     }
 
     if (combo === 'enter') {
