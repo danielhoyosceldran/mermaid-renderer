@@ -258,7 +258,7 @@ body {
 }
 
 #btn-zoom-reset {
-  min-width: 48px;
+  width: 65px;
 }
 
 #zoom-speed-label {
