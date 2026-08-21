@@ -28,12 +28,21 @@ const zoomSpeedSlider = document.getElementById('zoom-speed');
 const zoomSpeedValue = document.getElementById('zoom-speed-value');
 const btnZoomSpeedDown = document.getElementById('btn-zoom-speed-down');
 const btnZoomSpeedUp = document.getElementById('btn-zoom-speed-up');
+const btnPopout = document.getElementById('btn-popout');
 
 // Unique ID required by mermaid.render; reuse causes conflicts
 let renderId = 0;
 
+const liveChannel = new BroadcastChannel('mermaid-live');
+liveChannel.onmessage = (e) => {
+  if (e.data && e.data.type === 'request-sync') {
+    liveChannel.postMessage({ code: editor.value });
+  }
+};
+
 async function renderDiagram() {
   const code = editor.value.trim();
+  liveChannel.postMessage({ code: editor.value });
   if (!code) {
     output.innerHTML = '';
     return;
@@ -50,6 +59,10 @@ async function renderDiagram() {
     output.textContent = err && err.message ? err.message : String(err);
   }
 }
+
+btnPopout.addEventListener('click', () => {
+  window.open('preview.html', 'mermaid-preview', 'width=800,height=600');
+});
 
 function updateHighlight() {
   // Trailing newline needs a trailing blank line to keep heights in sync.
