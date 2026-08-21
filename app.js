@@ -8,7 +8,10 @@ mermaid.initialize({ startOnLoad: false });
 
 const editor = document.getElementById('editor');
 const editorHighlight = document.getElementById('editor-highlight');
+const editorGutter = document.getElementById('editor-gutter');
+const editorWrapEl = document.getElementById('editor-wrap');
 const btnSettings = document.getElementById('btn-settings');
+const btnWrap = document.getElementById('btn-wrap');
 const output = document.getElementById('output');
 const splitter = document.getElementById('splitter');
 const btnOpen = document.getElementById('btn-open');
@@ -49,11 +52,36 @@ function updateHighlight() {
   // Trailing newline needs a trailing blank line to keep heights in sync.
   editorHighlight.innerHTML = highlightToHtml(editor.value) + '\n';
 }
+
+function updateGutter() {
+  const lineCount = editor.value.split('\n').length;
+  let html = '';
+  for (let i = 1; i <= lineCount; i++) html += i + '\n';
+  editorGutter.textContent = html;
+  const digits = String(lineCount).length;
+  editorWrapEl.style.setProperty('--gutter-width', Math.max(2, digits + 1.5) + 'ch');
+}
+
 editor.addEventListener('input', updateHighlight);
+editor.addEventListener('input', updateGutter);
 editor.addEventListener('scroll', () => {
   editorHighlight.scrollTop = editor.scrollTop;
   editorHighlight.scrollLeft = editor.scrollLeft;
+  editorGutter.scrollTop = editor.scrollTop;
 });
+
+function applyWordWrap() {
+  editorWrapEl.classList.toggle('no-wrap', !settings.wordWrap);
+  btnWrap.classList.toggle('active', settings.wordWrap);
+}
+
+function toggleWordWrap() {
+  settings.wordWrap = !settings.wordWrap;
+  saveSettings(settings);
+  applyWordWrap();
+}
+
+btnWrap.addEventListener('click', toggleWordWrap);
 
 // Hot reload with 400 ms debounce
 let debounceTimer;
@@ -75,6 +103,15 @@ applyEditorSettings();
 function applyEditorSettings() {
   editor.style.tabSize = String(settings.tabSize);
 }
+
+applyWordWrap();
+
+document.addEventListener('keydown', (e) => {
+  if (e.altKey && e.key.toLowerCase() === 'z') {
+    e.preventDefault();
+    toggleWordWrap();
+  }
+});
 
 function syncZoomSpeedUI() {
   zoomSpeedSlider.value = String(settings.zoomSpeed);
@@ -101,6 +138,7 @@ fileInput.addEventListener('change', async (e) => {
   if (!file) return;
   editor.value = await file.text();
   updateHighlight();
+  updateGutter();
   renderDiagram();
   fileInput.value = '';
 });
@@ -299,5 +337,6 @@ editor.value = saved !== null ? saved : `graph TD
     D --> B`;
 
 updateHighlight();
+updateGutter();
 applyTransform();
 renderDiagram();

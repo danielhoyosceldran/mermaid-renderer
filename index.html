@@ -15,6 +15,7 @@
       <span class="brand">Mermaid Renderer</span>
       <button id="btn-open">Open</button>
       <input id="file-input" type="file" accept=".mmd,.txt" hidden />
+      <button id="btn-wrap" title="Toggle word wrap (Alt+Z)">Wrap</button>
     </div>
     <div id="toolbar-splitter"></div>
     <div id="toolbar-right" class="toolbar-card">
@@ -25,6 +26,7 @@
   <div id="main">
     <div id="left-panel">
       <div id="editor-wrap">
+        <div id="editor-gutter" aria-hidden="true"></div>
         <pre id="editor-highlight" aria-hidden="true"></pre>
         <textarea id="editor" spellcheck="false" placeholder="Enter Mermaid diagram code..."></textarea>
       </div>

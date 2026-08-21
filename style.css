@@ -135,7 +135,10 @@ body {
 #editor-highlight,
 #editor {
   position: absolute;
-  inset: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: var(--gutter-width, 0px);
   margin: 0;
   padding: 12px;
   border: none;
@@ -146,6 +149,32 @@ body {
   word-wrap: break-word;
   overflow-wrap: break-word;
   tab-size: inherit;
+}
+
+#editor-wrap.no-wrap #editor-highlight,
+#editor-wrap.no-wrap #editor {
+  white-space: pre;
+  word-wrap: normal;
+  overflow-wrap: normal;
+}
+
+#editor-gutter {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: var(--gutter-width, 0px);
+  padding: 12px 6px 12px 0;
+  margin: 0;
+  overflow: hidden;
+  text-align: right;
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--tt-text-dim);
+  user-select: none;
+  pointer-events: none;
+  white-space: pre;
 }
 
 #editor-highlight {
@@ -285,6 +314,11 @@ body {
 #btn-settings {
   margin-left: auto;
   flex-shrink: 0;
+}
+
+#btn-wrap.active {
+  background: var(--tt-accent);
+  color: var(--tt-accent-text, #fff);
 }
 
 #settings-overlay {
