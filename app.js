@@ -21,6 +21,7 @@ const btnZoomIn = document.getElementById('btn-zoom-in');
 const btnZoomOut = document.getElementById('btn-zoom-out');
 const btnZoomReset = document.getElementById('btn-zoom-reset');
 const zoomSpeedSlider = document.getElementById('zoom-speed');
+const zoomSpeedValue = document.getElementById('zoom-speed-value');
 
 // Unique ID required by mermaid.render; reuse causes conflicts
 let renderId = 0;
@@ -75,15 +76,20 @@ function applyEditorSettings() {
   editor.style.tabSize = String(settings.tabSize);
 }
 
-zoomSpeedSlider.value = String(settings.zoomSpeed);
+function syncZoomSpeedUI() {
+  zoomSpeedSlider.value = String(settings.zoomSpeed);
+  zoomSpeedValue.textContent = settings.zoomSpeed.toFixed(2);
+}
+syncZoomSpeedUI();
 zoomSpeedSlider.addEventListener('input', () => {
   settings.zoomSpeed = parseFloat(zoomSpeedSlider.value);
+  zoomSpeedValue.textContent = settings.zoomSpeed.toFixed(2);
   saveSettings(settings);
 });
 
 const settingsPanel = createSettingsPanel(settings, () => {
   applyEditorSettings();
-  zoomSpeedSlider.value = String(settings.zoomSpeed);
+  syncZoomSpeedUI();
 });
 btnSettings.addEventListener('click', () => settingsPanel.open());
 

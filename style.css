@@ -271,9 +271,15 @@ body {
 }
 
 #zoom-speed {
-  width: 70px;
+  width: 140px;
   accent-color: var(--tt-accent);
   cursor: pointer;
+}
+
+#zoom-speed-value {
+  width: 34px;
+  text-align: right;
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
 }
 
 #btn-settings {
