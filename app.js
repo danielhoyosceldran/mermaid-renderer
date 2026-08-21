@@ -53,13 +53,61 @@ function updateHighlight() {
   editorHighlight.innerHTML = highlightToHtml(editor.value) + '\n';
 }
 
+let measureEl;
+function ensureMeasureEl() {
+  if (measureEl) return measureEl;
+  measureEl = document.createElement('div');
+  const s = measureEl.style;
+  s.position = 'absolute';
+  s.visibility = 'hidden';
+  s.top = '0';
+  s.left = '-99999px';
+  s.margin = '0';
+  s.padding = '0';
+  s.whiteSpace = 'pre-wrap';
+  s.wordWrap = 'break-word';
+  s.overflowWrap = 'break-word';
+  s.fontFamily = "'JetBrains Mono', ui-monospace, monospace";
+  s.fontSize = '13px';
+  s.lineHeight = '1.5';
+  document.body.appendChild(measureEl);
+  return measureEl;
+}
+
+// Number of visual (wrapped) rows each logical line occupies, so the gutter
+// can put a blank line under a number for each wrap instead of counting it
+// as a new line.
+function measureWrappedRowCounts(lines) {
+  const el = ensureMeasureEl();
+  const contentWidth = editor.clientWidth - 24; // 12px padding each side
+  el.style.width = Math.max(0, contentWidth) + 'px';
+  el.innerHTML = '';
+  const divs = lines.map((line) => {
+    const d = document.createElement('div');
+    d.textContent = line.length ? line : '​';
+    el.appendChild(d);
+    return d;
+  });
+  const lineHeightPx = 13 * 1.5;
+  return divs.map((d) => Math.max(1, Math.round(d.offsetHeight / lineHeightPx)));
+}
+
 function updateGutter() {
-  const lineCount = editor.value.split('\n').length;
-  let html = '';
-  for (let i = 1; i <= lineCount; i++) html += i + '\n';
-  editorGutter.textContent = html;
+  const lines = editor.value.split('\n');
+  const lineCount = lines.length;
   const digits = String(lineCount).length;
   editorWrapEl.style.setProperty('--gutter-width', Math.max(2, digits + 1.5) + 'ch');
+
+  let html = '';
+  if (settings.wordWrap) {
+    const rowCounts = measureWrappedRowCounts(lines);
+    for (let i = 0; i < lineCount; i++) {
+      html += (i + 1) + '\n'.repeat(rowCounts[i]);
+    }
+  } else {
+    for (let i = 1; i <= lineCount; i++) html += i + '\n';
+  }
+  editorGutter.textContent = html;
 }
 
 editor.addEventListener('input', updateHighlight);
@@ -79,7 +127,12 @@ function toggleWordWrap() {
   settings.wordWrap = !settings.wordWrap;
   saveSettings(settings);
   applyWordWrap();
+  updateGutter();
 }
+
+new ResizeObserver(() => {
+  if (settings.wordWrap) updateGutter();
+}).observe(editor);
 
 btnWrap.addEventListener('click', toggleWordWrap);
 
