@@ -12,6 +12,7 @@ const editorGutter = document.getElementById('editor-gutter');
 const editorWrapEl = document.getElementById('editor-wrap');
 const btnSettings = document.getElementById('btn-settings');
 const btnWrap = document.getElementById('btn-wrap');
+const btnBrWrap = document.getElementById('btn-br-wrap');
 const output = document.getElementById('output');
 const splitter = document.getElementById('splitter');
 const btnOpen = document.getElementById('btn-open');
@@ -50,7 +51,7 @@ async function renderDiagram() {
 
 function updateHighlight() {
   // Trailing newline needs a trailing blank line to keep heights in sync.
-  editorHighlight.innerHTML = highlightToHtml(editor.value) + '\n';
+  editorHighlight.innerHTML = highlightToHtml(editor.value, settings.brWrap) + '\n';
 }
 
 let measureEl;
@@ -136,6 +137,19 @@ new ResizeObserver(() => {
 
 btnWrap.addEventListener('click', toggleWordWrap);
 
+function applyBrWrap() {
+  btnBrWrap.classList.toggle('active', settings.brWrap);
+}
+
+function toggleBrWrap() {
+  settings.brWrap = !settings.brWrap;
+  saveSettings(settings);
+  applyBrWrap();
+  updateHighlight();
+}
+
+btnBrWrap.addEventListener('click', toggleBrWrap);
+
 // Hot reload with 400 ms debounce
 let debounceTimer;
 function scheduleRender() {
@@ -158,6 +172,7 @@ function applyEditorSettings() {
 }
 
 applyWordWrap();
+applyBrWrap();
 
 document.addEventListener('keydown', (e) => {
   if (e.altKey && e.key.toLowerCase() === 'z') {

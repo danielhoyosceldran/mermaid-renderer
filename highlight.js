@@ -26,8 +26,10 @@ function escapeHtml(s) {
     .replace(/>/g, '&gt;');
 }
 
-/** Highlight a single line, returning HTML with <span class="tok-*"> markers. */
-function highlightLine(line) {
+/** Highlight a single line, returning HTML with <span class="tok-*"> markers.
+ * When brWrap is true, literal <br> tags render as an actual visual line
+ * break in this (read-only) layer — the textarea's real value is untouched. */
+function highlightLine(line, brWrap) {
   // Comments swallow the rest of the line: highlight and return early.
   const commentIdx = line.indexOf('%%');
   let code = commentIdx === -1 ? line : line.slice(0, commentIdx);
@@ -60,7 +62,11 @@ function highlightLine(line) {
       break;
     }
     out += escapeHtml(code.slice(i, best.index));
-    out += `<span class="${best.cls}">${escapeHtml(best.text)}</span>`;
+    if (best.cls === 'tok-br' && brWrap) {
+      out += `<span class="tok-br tok-br-wrapped">${escapeHtml(best.text)}</span><br>`;
+    } else {
+      out += `<span class="${best.cls}">${escapeHtml(best.text)}</span>`;
+    }
     i = best.index + best.text.length;
   }
 
@@ -68,6 +74,6 @@ function highlightLine(line) {
   return out;
 }
 
-export function highlightToHtml(source) {
-  return source.split('\n').map(highlightLine).join('\n');
+export function highlightToHtml(source, brWrap) {
+  return source.split('\n').map((line) => highlightLine(line, brWrap)).join('\n');
 }

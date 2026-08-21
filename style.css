@@ -205,6 +205,12 @@ body {
 .tok-bracket { color: var(--tt-text-muted); }
 .tok-comment { color: var(--tt-text-dim); font-style: italic; }
 .tok-br { color: #db2777; font-style: italic; }
+.tok-br-wrapped {
+  color: #db2777;
+  font-style: italic;
+  background: rgba(219, 39, 119, 0.12);
+  border-radius: 2px;
+}
 
 #splitter {
   width: 5px;
@@ -317,7 +323,8 @@ body {
   flex-shrink: 0;
 }
 
-#btn-wrap.active {
+#btn-wrap.active,
+#btn-br-wrap.active {
   background: var(--tt-accent);
   color: var(--tt-accent-text, #fff);
 }

@@ -10,6 +10,7 @@ export const DEFAULT_SETTINGS = {
   commentToken: '%%',
   zoomSpeed: 0.1,
   wordWrap: true,
+  brWrap: false,
   keymap: {
     duplicateLine: 'ctrl+d',
     indent: 'tab',
