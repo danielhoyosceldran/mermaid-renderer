@@ -26,6 +26,8 @@ const btnZoomOut = document.getElementById('btn-zoom-out');
 const btnZoomReset = document.getElementById('btn-zoom-reset');
 const zoomSpeedSlider = document.getElementById('zoom-speed');
 const zoomSpeedValue = document.getElementById('zoom-speed-value');
+const btnZoomSpeedDown = document.getElementById('btn-zoom-speed-down');
+const btnZoomSpeedUp = document.getElementById('btn-zoom-speed-up');
 
 // Unique ID required by mermaid.render; reuse causes conflicts
 let renderId = 0;
@@ -191,6 +193,17 @@ zoomSpeedSlider.addEventListener('input', () => {
   zoomSpeedValue.textContent = settings.zoomSpeed.toFixed(2);
   saveSettings(settings);
 });
+
+function stepZoomSpeed(delta) {
+  const min = parseFloat(zoomSpeedSlider.min);
+  const max = parseFloat(zoomSpeedSlider.max);
+  settings.zoomSpeed = Math.min(max, Math.max(min, settings.zoomSpeed + delta));
+  syncZoomSpeedUI();
+  saveSettings(settings);
+}
+
+btnZoomSpeedDown.addEventListener('click', () => stepZoomSpeed(-0.01));
+btnZoomSpeedUp.addEventListener('click', () => stepZoomSpeed(0.01));
 
 const settingsPanel = createSettingsPanel(settings, () => {
   applyEditorSettings();
