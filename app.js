@@ -2,10 +2,12 @@ import mermaid from './vendor/mermaid/mermaid.esm.min.mjs';
 import { attachEditor, loadSettings } from './editor.js';
 import { createSettingsPanel } from './settings-panel.js';
 import { attachAutocomplete } from './autocomplete.js';
+import { highlightToHtml } from './highlight.js';
 
 mermaid.initialize({ startOnLoad: false });
 
 const editor = document.getElementById('editor');
+const editorHighlight = document.getElementById('editor-highlight');
 const btnSettings = document.getElementById('btn-settings');
 const output = document.getElementById('output');
 const splitter = document.getElementById('splitter');
@@ -41,6 +43,16 @@ async function renderDiagram() {
   }
 }
 
+function updateHighlight() {
+  // Trailing newline needs a trailing blank line to keep heights in sync.
+  editorHighlight.innerHTML = highlightToHtml(editor.value) + '\n';
+}
+editor.addEventListener('input', updateHighlight);
+editor.addEventListener('scroll', () => {
+  editorHighlight.scrollTop = editor.scrollTop;
+  editorHighlight.scrollLeft = editor.scrollLeft;
+});
+
 // Hot reload with 400 ms debounce
 let debounceTimer;
 function scheduleRender() {
@@ -74,6 +86,7 @@ fileInput.addEventListener('change', async (e) => {
   const file = e.target.files[0];
   if (!file) return;
   editor.value = await file.text();
+  updateHighlight();
   renderDiagram();
   fileInput.value = '';
 });
@@ -271,5 +284,6 @@ editor.value = saved !== null ? saved : `graph TD
     B -->|No| D[Debug]
     D --> B`;
 
+updateHighlight();
 applyTransform();
 renderDiagram();

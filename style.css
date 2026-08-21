@@ -126,19 +126,55 @@ body {
   border-right: none;
 }
 
-#editor {
+#editor-wrap {
+  position: relative;
   flex: 1;
-  resize: none;
-  border: none;
-  outline: none;
+  overflow: hidden;
+}
+
+#editor-highlight,
+#editor {
+  position: absolute;
+  inset: 0;
+  margin: 0;
   padding: 12px;
+  border: none;
   font-family: 'JetBrains Mono', ui-monospace, monospace;
   font-size: 13px;
   line-height: 1.5;
-  overflow: auto;
-  background: transparent;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  tab-size: inherit;
+}
+
+#editor-highlight {
+  z-index: 1;
+  overflow: hidden;
+  pointer-events: none;
   color: var(--tt-text);
 }
+
+#editor {
+  z-index: 2;
+  resize: none;
+  outline: none;
+  overflow: auto;
+  background: transparent;
+  color: transparent;
+  caret-color: var(--tt-text);
+}
+
+#editor::selection {
+  background: rgba(99, 102, 241, 0.35);
+}
+
+.tok-keyword { color: #9333ea; font-weight: 700; }
+.tok-arrow { color: #0891b2; font-weight: 700; }
+.tok-string { color: #16a34a; }
+.tok-number { color: #ea580c; }
+.tok-bracket { color: var(--tt-text-muted); }
+.tok-comment { color: var(--tt-text-dim); font-style: italic; }
 
 #splitter {
   width: 5px;
