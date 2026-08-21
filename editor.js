@@ -8,6 +8,7 @@ export const DEFAULT_SETTINGS = {
   insertSpaces: true,
   autoIndent: true,
   commentToken: '%%',
+  zoomSpeed: 0.1,
   keymap: {
     duplicateLine: 'ctrl+d',
     indent: 'tab',

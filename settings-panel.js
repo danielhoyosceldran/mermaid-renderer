@@ -35,6 +35,10 @@ export function createSettingsPanel(settings, onApply) {
             <span>Comment token</span>
             <input type="text" size="4" data-field="commentToken" />
           </label>
+          <label class="settings-row">
+            <span>Zoom speed</span>
+            <input type="number" min="0.01" max="1" step="0.01" data-field="zoomSpeed" />
+          </label>
         </section>
         <section class="settings-group">
           <h3>Shortcuts <small>click a binding, then press keys</small></h3>
@@ -134,8 +138,12 @@ export function createSettingsPanel(settings, onApply) {
     const key = input.dataset.field;
     if (input.type === 'checkbox') settings[key] = input.checked;
     else if (input.type === 'number') {
-      const n = parseInt(input.value, 10);
-      if (!Number.isNaN(n)) settings[key] = Math.min(8, Math.max(1, n));
+      const n = parseFloat(input.value);
+      if (!Number.isNaN(n)) {
+        const min = input.min !== '' ? parseFloat(input.min) : -Infinity;
+        const max = input.max !== '' ? parseFloat(input.max) : Infinity;
+        settings[key] = Math.min(max, Math.max(min, n));
+      }
     } else settings[key] = input.value;
     persist();
   });

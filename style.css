@@ -154,15 +154,30 @@ body {
 #right-panel {
   flex: 1;
   min-width: 150px;
-  overflow: auto;
+  position: relative;
+  overflow: hidden;
   background: var(--tt-surface);
   border-radius: 0 1rem 1rem 0;
   border: 1px solid var(--tt-border);
 }
 
+#viewport {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  cursor: grab;
+}
+
+#viewport.panning {
+  cursor: grabbing;
+}
+
 #output {
+  position: absolute;
+  top: 0;
+  left: 0;
   padding: 12px;
-  min-height: 100%;
+  transform-origin: 0 0;
   white-space: pre-wrap;
   font-family: 'JetBrains Mono', ui-monospace, monospace;
   font-size: 13px;
@@ -170,7 +185,44 @@ body {
 }
 
 #output svg {
-  max-width: 100%;
+  display: block;
+}
+
+#zoom-controls {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 10;
+  display: flex;
+  gap: 4px;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--tt-border);
+  border-radius: 0.5rem;
+  padding: 3px;
+}
+
+#zoom-controls button {
+  min-width: 28px;
+  padding: 4px 8px;
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--tt-text-soft);
+  background: var(--tt-surface-soft);
+  border: 1px solid var(--tt-border);
+  border-radius: 0.4rem;
+}
+
+#zoom-controls button:hover {
+  background: var(--tt-accent);
+  color: #fff;
+  border-color: var(--tt-accent);
+}
+
+#btn-zoom-reset {
+  min-width: 48px;
 }
 
 #btn-settings {

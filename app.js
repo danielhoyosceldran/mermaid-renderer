@@ -14,6 +14,10 @@ const fileInput = document.getElementById('file-input');
 const leftPanel = document.getElementById('left-panel');
 const main = document.getElementById('main');
 const toolbarLeft = document.getElementById('toolbar-left');
+const viewport = document.getElementById('viewport');
+const btnZoomIn = document.getElementById('btn-zoom-in');
+const btnZoomOut = document.getElementById('btn-zoom-out');
+const btnZoomReset = document.getElementById('btn-zoom-reset');
 
 // Unique ID required by mermaid.render; reuse causes conflicts
 let renderId = 0;
@@ -28,6 +32,7 @@ async function renderDiagram() {
   try {
     const { svg } = await mermaid.render(id, code);
     output.innerHTML = svg;
+    fitToWidth();
   } catch (err) {
     // Remove orphaned element mermaid may have injected
     const orphan = document.getElementById(id);
@@ -130,6 +135,103 @@ document.addEventListener('keydown', (e) => {
   }
 });
 
+// Pan/zoom on right panel.
+// zoom = 1 means the diagram's natural width fills the viewport width
+// (baseScale handles that conversion); zoom itself is the user-facing multiplier.
+let zoom = 1;
+let panX = 0;
+let panY = 0;
+let baseScale = 1;
+const ZOOM_MIN = 0.1;
+const ZOOM_MAX = 8;
+
+function applyTransform() {
+  const scale = baseScale * zoom;
+  output.style.transform = `translate(${panX}px, ${panY}px) scale(${scale})`;
+  btnZoomReset.textContent = Math.round(zoom * 100) + '%';
+}
+
+// Recompute baseScale so the diagram's natural width fills the viewport width.
+function fitToWidth() {
+  const svg = output.querySelector('svg');
+  const naturalWidth = svg ? svg.getBoundingClientRect().width / (baseScale * zoom) : 0;
+  const viewportWidth = viewport.clientWidth;
+  baseScale = naturalWidth > 0 ? viewportWidth / naturalWidth : 1;
+  applyTransform();
+}
+
+function resetView() {
+  zoom = 1;
+  panX = 0;
+  panY = 0;
+  applyTransform();
+}
+
+function zoomAt(factor, clientX, clientY) {
+  const rect = viewport.getBoundingClientRect();
+  const x = clientX - rect.left;
+  const y = clientY - rect.top;
+  const newZoom = Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, zoom * factor));
+  const ratio = newZoom / zoom;
+  panX = x - ratio * (x - panX);
+  panY = y - ratio * (y - panY);
+  zoom = newZoom;
+  applyTransform();
+}
+
+viewport.addEventListener('wheel', (e) => {
+  e.preventDefault();
+  if (e.ctrlKey || e.metaKey) {
+    const speed = settings.zoomSpeed;
+    const factor = e.deltaY < 0 ? 1 + speed : 1 / (1 + speed);
+    zoomAt(factor, e.clientX, e.clientY);
+    return;
+  }
+  panX -= e.deltaX;
+  panY -= e.deltaY;
+  applyTransform();
+}, { passive: false });
+
+btnZoomIn.addEventListener('click', () => {
+  const rect = viewport.getBoundingClientRect();
+  const factor = 1 + settings.zoomSpeed * 3;
+  zoomAt(factor, rect.left + rect.width / 2, rect.top + rect.height / 2);
+});
+btnZoomOut.addEventListener('click', () => {
+  const rect = viewport.getBoundingClientRect();
+  const factor = 1 / (1 + settings.zoomSpeed * 3);
+  zoomAt(factor, rect.left + rect.width / 2, rect.top + rect.height / 2);
+});
+btnZoomReset.addEventListener('click', resetView);
+
+let panning = false;
+let panStartX = 0;
+let panStartY = 0;
+let panOriginX = 0;
+let panOriginY = 0;
+
+viewport.addEventListener('mousedown', (e) => {
+  panning = true;
+  panStartX = e.clientX;
+  panStartY = e.clientY;
+  panOriginX = panX;
+  panOriginY = panY;
+  viewport.classList.add('panning');
+  e.preventDefault();
+});
+
+document.addEventListener('mousemove', (e) => {
+  if (!panning) return;
+  panX = panOriginX + (e.clientX - panStartX);
+  panY = panOriginY + (e.clientY - panStartY);
+  applyTransform();
+});
+
+document.addEventListener('mouseup', () => {
+  panning = false;
+  viewport.classList.remove('panning');
+});
+
 // Splitter drag logic
 let dragging = false;
 let dragStartX = 0;
@@ -152,11 +254,14 @@ document.addEventListener('mousemove', (e) => {
   );
   leftPanel.style.width = newWidth + 'px';
   toolbarLeft.style.width = newWidth + 'px';
+  fitToWidth();
 });
 
 document.addEventListener('mouseup', () => {
   dragging = false;
 });
+
+window.addEventListener('resize', fitToWidth);
 
 // Load saved diagram, else default
 const saved = localStorage.getItem(STORAGE_KEY);
@@ -166,4 +271,5 @@ editor.value = saved !== null ? saved : `graph TD
     B -->|No| D[Debug]
     D --> B`;
 
+applyTransform();
 renderDiagram();
