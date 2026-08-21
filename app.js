@@ -1,5 +1,5 @@
 import mermaid from './vendor/mermaid/mermaid.esm.min.mjs';
-import { attachEditor, loadSettings } from './editor.js';
+import { attachEditor, loadSettings, saveSettings } from './editor.js';
 import { createSettingsPanel } from './settings-panel.js';
 import { attachAutocomplete } from './autocomplete.js';
 import { highlightToHtml } from './highlight.js';
@@ -20,6 +20,7 @@ const viewport = document.getElementById('viewport');
 const btnZoomIn = document.getElementById('btn-zoom-in');
 const btnZoomOut = document.getElementById('btn-zoom-out');
 const btnZoomReset = document.getElementById('btn-zoom-reset');
+const zoomSpeedSlider = document.getElementById('zoom-speed');
 
 // Unique ID required by mermaid.render; reuse causes conflicts
 let renderId = 0;
@@ -74,8 +75,15 @@ function applyEditorSettings() {
   editor.style.tabSize = String(settings.tabSize);
 }
 
+zoomSpeedSlider.value = String(settings.zoomSpeed);
+zoomSpeedSlider.addEventListener('input', () => {
+  settings.zoomSpeed = parseFloat(zoomSpeedSlider.value);
+  saveSettings(settings);
+});
+
 const settingsPanel = createSettingsPanel(settings, () => {
   applyEditorSettings();
+  zoomSpeedSlider.value = String(settings.zoomSpeed);
 });
 btnSettings.addEventListener('click', () => settingsPanel.open());
 

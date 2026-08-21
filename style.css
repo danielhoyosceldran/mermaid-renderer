@@ -261,6 +261,21 @@ body {
   min-width: 48px;
 }
 
+#zoom-speed-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 6px;
+  font-size: 11px;
+  color: var(--tt-text-muted);
+}
+
+#zoom-speed {
+  width: 70px;
+  accent-color: var(--tt-accent);
+  cursor: pointer;
+}
+
 #btn-settings {
   margin-left: auto;
   flex-shrink: 0;

@@ -37,7 +37,7 @@ export function createSettingsPanel(settings, onApply) {
           </label>
           <label class="settings-row">
             <span>Zoom speed</span>
-            <input type="number" min="0.01" max="1" step="0.01" data-field="zoomSpeed" />
+            <input type="number" min="0" max="2" step="0.01" data-field="zoomSpeed" />
           </label>
         </section>
         <section class="settings-group">
