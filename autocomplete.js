@@ -78,7 +78,7 @@ function score(label, prefix) {
   return (boundary ? 200 : 100) - idx - label.length * 0.01;
 }
 
-export function attachAutocomplete(textarea, onChange) {
+export function attachAutocomplete(textarea, onChange, getSettings) {
   const popup = document.createElement('div');
   popup.id = 'autocomplete';
   popup.setAttribute('role', 'listbox');
@@ -150,6 +150,10 @@ export function attachAutocomplete(textarea, onChange) {
   }
 
   function refresh(explicit = false) {
+    if (!explicit && getSettings && !getSettings().suggestions) {
+      close();
+      return;
+    }
     prefix = prefixAt(textarea.value, textarea.selectionStart);
     if (!explicit && !open && prefix.text.length < MIN_PREFIX) {
       close();

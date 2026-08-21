@@ -13,6 +13,7 @@ const editorWrapEl = document.getElementById('editor-wrap');
 const btnSettings = document.getElementById('btn-settings');
 const btnWrap = document.getElementById('btn-wrap');
 const btnBrWrap = document.getElementById('btn-br-wrap');
+const btnSuggestions = document.getElementById('btn-suggestions');
 const output = document.getElementById('output');
 const splitter = document.getElementById('splitter');
 const btnOpen = document.getElementById('btn-open');
@@ -173,14 +174,28 @@ function scheduleRender() {
 }
 editor.addEventListener('input', scheduleRender);
 
-// Autocomplete is attached first so that, while its popup is open, it can claim
-// Tab/Enter/arrows before the editor keymap sees them.
-attachAutocomplete(editor, scheduleRender);
-
 // Code-editor behaviours (indentation, line ops, comments)
 const settings = loadSettings();
+
+// Autocomplete is attached first so that, while its popup is open, it can claim
+// Tab/Enter/arrows before the editor keymap sees them.
+attachAutocomplete(editor, scheduleRender, () => settings);
+
 attachEditor(editor, () => settings, scheduleRender);
 applyEditorSettings();
+
+function applySuggestions() {
+  btnSuggestions.classList.toggle('active', settings.suggestions);
+}
+
+function toggleSuggestions() {
+  settings.suggestions = !settings.suggestions;
+  saveSettings(settings);
+  applySuggestions();
+}
+
+btnSuggestions.addEventListener('click', toggleSuggestions);
+applySuggestions();
 
 function applyEditorSettings() {
   editor.style.tabSize = String(settings.tabSize);

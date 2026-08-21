@@ -11,6 +11,7 @@ export const DEFAULT_SETTINGS = {
   zoomSpeed: 0.1,
   wordWrap: true,
   brWrap: false,
+  suggestions: true,
   keymap: {
     duplicateLine: 'ctrl+d',
     indent: 'tab',
