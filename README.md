@@ -38,7 +38,8 @@ Then open `http://localhost:3000` (or whichever port).
 | Key | Action |
 |---|---|
 | `Ctrl/Cmd + Enter` | Recompile now |
-| `Ctrl/Cmd + S` | Save to browser storage (the editor also autosaves) |
+| `Ctrl/Cmd + S` | Save; names the document the first time |
+| `Ctrl/Cmd + O` | Documents manager |
 | `Ctrl/Cmd + Shift + S` | Save code as `diagram.mmd` |
 | `Ctrl/Cmd + Space` | Open completions |
 | `Tab` / `Enter` | Accept the highlighted completion |
@@ -46,6 +47,54 @@ Then open `http://localhost:3000` (or whichever port).
 | `Alt + Enter` | Insert `<br>` at the caret |
 | `Ctrl/Cmd + F` | Find / replace |
 | `Ctrl/Cmd + Z` / `Ctrl/Cmd + Y` | Undo / redo |
+
+## Documents
+
+Diagrams live in the browser, not on disk. A fresh diagram starts as
+**Untitled** and is autosaved continuously. The first `Ctrl+S` asks for a name;
+from then on both autosave and `Ctrl+S` write to that named document. The
+document chip in the toolbar shows the current name (with a dot while there are
+unsaved keystrokes) and opens the manager, as does `Ctrl+O`: from there you can
+create, open, rename, duplicate and delete documents. `Import` brings a `.mmd`
+file in as a new untitled document without touching the one you have open, and
+`Ctrl+Shift+S` exports the current one back to disk.
+
+Each tab remembers its own open document, so two tabs can edit two diagrams
+side by side. A tab with no memory of one (a brand new tab) opens the most
+recently updated document.
+
+### Storage layout
+
+Two `localStorage` keys per document, and no shared index:
+
+```
+mermaid-renderer:doc:<id>     the text
+mermaid-renderer:meta:<id>    {name, createdAt, updatedAt, rev, size}
+sessionStorage
+  mermaid-renderer:active     the document THIS tab has open
+```
+
+There is deliberately no index document listing every diagram. Chromium caches
+`localStorage` per renderer process and refreshes a tab's cache from the
+`storage` event, so a tab reacting to another tab's write can still read a
+stale value for a key whose event it has not processed yet. With a shared
+index, a read-modify-write from inside an event handler would write that stale
+snapshot back and silently undo the other tab's save. Per-document keys mean a
+write can only ever affect its own document, and the document list is a cheap
+key scan instead.
+
+The rest of the safety net:
+
+* The body is written before its metadata, so an interrupted save leaves a body
+  with no metadata — which is re-registered as a `Recovered` document on the
+  next load rather than lost. Metadata whose body is gone is dropped.
+* Each document carries a `rev`. If another tab saved since this tab last did,
+  autosave stands down instead of overwriting and `Ctrl+S` asks whether to keep
+  yours, keep theirs, or save a copy.
+* If another tab deletes the open document, `Ctrl+S` saves the text again as a
+  new document instead of failing.
+* When the browser refuses to store (quota, private mode), the editor says so
+  and keeps the text; `Ctrl+Shift+S` is the way out to a file.
 
 Everything under Settings → Shortcuts is rebindable (duplicate line, move line,
 comment, delete line, indent/outdent, …). The toolbar also has `Wrap`,

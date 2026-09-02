@@ -32,8 +32,11 @@
 <body>
   <div id="toolbar">
     <div id="toolbar-left" class="toolbar-card">
-      <span class="brand">Mermaid Renderer</span>
-      <button id="btn-open">Open</button>
+      <span class="brand">Mermaid</span>
+      <button id="doc-name" class="doc-chip" title="Documents (Ctrl+O)">
+        <span id="doc-name-text">Untitled</span><span id="doc-dirty" class="doc-dot" aria-hidden="true"></span><span class="doc-caret" aria-hidden="true">&#9662;</span>
+      </button>
+      <button id="btn-import" title="Load a .mmd file from disk">Import</button>
       <input id="file-input" type="file" accept=".mmd,.txt" hidden />
       <button id="btn-wrap" title="Toggle word wrap (Alt+Z)">Wrap</button>
       <button id="btn-br-wrap" title="Show &lt;br&gt; as a visual line break (display only)">&lt;br&gt; wrap</button>
@@ -41,7 +44,7 @@
     </div>
     <div id="toolbar-splitter"></div>
     <div id="toolbar-right" class="toolbar-card">
-      <span class="hint">Ctrl+S save &middot; Ctrl+Shift+S export &middot; Ctrl+Enter render &middot; Ctrl+Space complete</span>
+      <span class="hint">Ctrl+S save &middot; Ctrl+O documents &middot; Ctrl+Shift+S export &middot; Ctrl+Enter render</span>
       <button id="btn-popout" title="Open preview in new window">Open in window</button>
       <button id="btn-settings" title="Editor settings">Settings</button>
     </div>

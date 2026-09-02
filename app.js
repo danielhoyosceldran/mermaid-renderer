@@ -2,19 +2,25 @@ import mermaid from './vendor/mermaid/mermaid.esm.min.mjs';
 import { loadSettings, saveSettings } from './editor.js';
 import { createSettingsPanel } from './settings-panel.js';
 import { createEditor } from './cm-editor.js';
+import * as store from './doc-store.js';
+import { createDocsPanel } from './docs-panel.js';
+import { askChoice, askText, isDialogOpen } from './dialogs.js';
 
 // securityLevel is pinned rather than left to mermaid's default, because the
 // rendered SVG is injected with innerHTML below.
 mermaid.initialize({ startOnLoad: false, securityLevel: 'strict' });
 
 const editorHost = document.getElementById('editor-host');
+const docNameButton = document.getElementById('doc-name');
+const docNameText = document.getElementById('doc-name-text');
+const docDirtyDot = document.getElementById('doc-dirty');
+const btnImport = document.getElementById('btn-import');
 const btnSettings = document.getElementById('btn-settings');
 const btnWrap = document.getElementById('btn-wrap');
 const btnBrWrap = document.getElementById('btn-br-wrap');
 const btnSuggestions = document.getElementById('btn-suggestions');
 const output = document.getElementById('output');
 const splitter = document.getElementById('splitter');
-const btnOpen = document.getElementById('btn-open');
 const fileInput = document.getElementById('file-input');
 const leftPanel = document.getElementById('left-panel');
 const main = document.getElementById('main');
@@ -29,7 +35,6 @@ const btnZoomSpeedDown = document.getElementById('btn-zoom-speed-down');
 const btnZoomSpeedUp = document.getElementById('btn-zoom-speed-up');
 const btnPopout = document.getElementById('btn-popout');
 
-const STORAGE_KEY = 'mermaid-renderer:diagram';
 const DEFAULT_DIAGRAM = `graph TD
     A[Start] --> B{Is it working?}
     B -->|Yes| C[Great!]
@@ -38,13 +43,52 @@ const DEFAULT_DIAGRAM = `graph TD
 
 const settings = loadSettings();
 
-// --- editor ------------------------------------------------------------------
+// --- active document ---------------------------------------------------------
 
-const saved = localStorage.getItem(STORAGE_KEY);
+// The editor always edits one stored document. `savedText` and `savedRev` are
+// what storage last confirmed, so "dirty" is a comparison and never a guess.
+let currentMeta;
+let savedText;
+let savedRev;
+// Set when storage moved ahead of us (another tab). Autosave stands down until
+// the user resolves it, so a background write can never clobber their work.
+let conflicted = false;
+// Set when another tab deleted this document. Autosave stands down rather than
+// resurrecting it behind the user's back; Ctrl+S saves it again.
+let missing = false;
+// Remembered from an import, to prefill the name dialog on the first save.
+let suggestedName = null;
+
+function resolveInitialDocument() {
+  // Older layouts first, so their documents keep their names instead of being
+  // rescued as "Recovered" by the sweep that follows.
+  store.migrateLegacy();
+  store.recover();
+
+  const activeId = store.activeId();
+  let doc = activeId ? store.get(activeId) : null;
+  if (!doc) {
+    const mostRecent = store.list()[0];
+    doc = mostRecent ? store.get(mostRecent.id) : null;
+  }
+  if (!doc) {
+    const meta = store.create({ name: null, text: DEFAULT_DIAGRAM });
+    doc = { meta, text: DEFAULT_DIAGRAM };
+  }
+  store.setActive(doc.meta.id);
+  return doc;
+}
+
+const initial = resolveInitialDocument();
+currentMeta = initial.meta;
+savedText = initial.text;
+savedRev = initial.meta.rev;
+
+// --- editor ------------------------------------------------------------------
 
 const editor = createEditor({
   parent: editorHost,
-  doc: saved !== null ? saved : DEFAULT_DIAGRAM,
+  doc: initial.text,
   getSettings: () => settings,
   onChange: onEditorChange,
   placeholder: 'Enter Mermaid diagram code...',
@@ -53,6 +97,7 @@ const editor = createEditor({
 function onEditorChange() {
   scheduleRender();
   scheduleAutosave();
+  updateDocChip();
 }
 
 // --- render ------------------------------------------------------------------
@@ -106,23 +151,324 @@ btnPopout.addEventListener('click', () => {
 
 // --- persistence -------------------------------------------------------------
 
+const AUTOSAVE_DELAY = 800;
+
 let autosaveTimer;
 function scheduleAutosave() {
   clearTimeout(autosaveTimer);
-  autosaveTimer = setTimeout(() => writeToLocalStorage(false), 800);
+  autosaveTimer = setTimeout(autosave, AUTOSAVE_DELAY);
 }
 
-function writeToLocalStorage(explicit) {
+function isDirty() {
+  return editor.getValue() !== savedText;
+}
+
+/** Persist the editor's text into the active document. */
+function writeActive({ force = false } = {}) {
   clearTimeout(autosaveTimer);
+  const text = editor.getValue();
+
+  // Deleted from another tab: save the text again under a new document rather
+  // than reporting a conflict against something that no longer exists.
+  if (missing || !store.get(currentMeta.id)) {
+    try {
+      const meta = store.create({
+        name: currentMeta.name ? store.uniqueName(currentMeta.name) : null,
+        text,
+      });
+      missing = false;
+      conflicted = false;
+      currentMeta = meta;
+      savedText = text;
+      savedRev = meta.rev;
+      updateDocChip();
+      docsPanel.refresh();
+      return 'saved';
+    } catch (err) {
+      showToast(
+        err instanceof store.QuotaError
+          ? 'Browser storage is full — use Ctrl+Shift+S to export this diagram to a file'
+          : 'Could not save: ' + (err && err.message ? err.message : err)
+      );
+      return err instanceof store.QuotaError ? 'quota' : 'error';
+    }
+  }
+
   try {
-    localStorage.setItem(STORAGE_KEY, editor.getValue());
-    if (explicit) showToast('Saved');
-  } catch {
-    showToast('Could not save: browser storage is full or blocked');
+    const meta = store.save(currentMeta.id, text, { baseRev: savedRev, force });
+    savedText = text;
+    savedRev = meta.rev;
+    currentMeta = meta;
+    conflicted = false;
+    updateDocChip();
+    docsPanel.refresh();
+    return 'saved';
+  } catch (err) {
+    if (err instanceof store.ConflictError) {
+      conflicted = true;
+      updateDocChip();
+      return 'conflict';
+    }
+    if (err instanceof store.QuotaError) {
+      showToast('Browser storage is full — use Ctrl+Shift+S to export this diagram to a file');
+      return 'quota';
+    }
+    showToast('Could not save: ' + (err && err.message ? err.message : err));
+    return 'error';
   }
 }
 
-window.addEventListener('beforeunload', () => writeToLocalStorage(false));
+function autosave() {
+  // Never autosave over a document another tab has moved on, and never
+  // resurrect one it deleted; the explicit Ctrl+S path asks the user.
+  if (conflicted || missing || !isDirty()) return;
+  const result = writeActive();
+  if (result === 'conflict') {
+    showToast('Changed in another tab — press Ctrl+S to resolve');
+  }
+}
+
+function flush() {
+  if (!conflicted && !missing && isDirty()) writeActive();
+}
+
+/** Ctrl+S: name the document if it is still untitled, then save. */
+async function saveExplicit() {
+  if (!currentMeta.name) {
+    const name = await askText({
+      title: 'Save document',
+      message: 'Autosave will keep writing to this document from now on.',
+      value: suggestedName || '',
+      placeholder: 'Document name',
+      confirmLabel: 'Save',
+      validate: (text) => {
+        if (!text.trim()) return 'Enter a name.';
+        if (store.nameTaken(text, currentMeta.id)) return 'A document with that name already exists.';
+        return null;
+      },
+    });
+    if (name === null) return;
+    try {
+      const meta = store.rename(currentMeta.id, name);
+      if (meta) {
+        currentMeta = meta;
+        savedRev = meta.rev;
+      }
+      suggestedName = null;
+    } catch (err) {
+      showToast(
+        err instanceof store.QuotaError
+          ? 'Browser storage is full — could not name this document'
+          : 'Could not rename: ' + (err && err.message ? err.message : err)
+      );
+      return;
+    }
+  }
+
+  // A conflict resolution is itself the save, so it reports its own outcome.
+  if (conflicted && !missing) {
+    await resolveConflict();
+    return;
+  }
+
+  if (writeActive() === 'saved') showToast('Saved to “' + store.displayName(currentMeta) + '”');
+}
+
+/** Ask what to do when storage moved ahead of this tab, then act on it. */
+async function resolveConflict() {
+  const choice = await askChoice({
+    title: 'Changed in another tab',
+    message:
+      '“' +
+      store.displayName(currentMeta) +
+      '” was modified elsewhere after you last saved here. Choose which version to keep.',
+    options: [
+      { label: 'Keep theirs', value: 'theirs' },
+      { label: 'Save as copy', value: 'copy' },
+      { label: 'Keep mine', value: 'mine', primary: true },
+    ],
+  });
+
+  if (choice === 'mine') {
+    // Force past the revision check; the user chose to overwrite.
+    if (writeActive({ force: true }) === 'saved') {
+      showToast('Saved to “' + store.displayName(currentMeta) + '”');
+    }
+    return;
+  }
+
+  if (choice === 'theirs') {
+    const stored = store.get(currentMeta.id);
+    if (stored) adoptDocument(stored, 'Reloaded from the other tab');
+    return;
+  }
+
+  if (choice === 'copy') {
+    try {
+      const meta = store.create({
+        name: store.uniqueName(store.displayName(currentMeta) + ' (copy)'),
+        text: editor.getValue(),
+      });
+      currentMeta = meta;
+      savedText = editor.getValue();
+      savedRev = meta.rev;
+      conflicted = false;
+      updateDocChip();
+      docsPanel.refresh();
+      showToast('Saved as “' + store.displayName(meta) + '”');
+    } catch (err) {
+      showToast(
+        err instanceof store.QuotaError
+          ? 'Browser storage is full — use Ctrl+Shift+S to export this diagram to a file'
+          : 'Could not save a copy: ' + (err && err.message ? err.message : err)
+      );
+    }
+  }
+}
+
+/** Put a stored document into the editor and make it the active one. */
+function adoptDocument({ meta, text }, toast) {
+  clearTimeout(autosaveTimer);
+  currentMeta = meta;
+  savedText = text;
+  savedRev = meta.rev;
+  conflicted = false;
+  missing = false;
+  suggestedName = null;
+  store.setActive(meta.id);
+  editor.setValue(text);
+  updateDocChip();
+  docsPanel.refresh();
+  renderDiagram();
+  if (toast) showToast(toast);
+}
+
+function updateDocChip() {
+  docNameText.textContent = store.displayName(currentMeta);
+  docNameButton.classList.toggle('untitled', !currentMeta.name);
+  docNameButton.classList.toggle('conflicted', conflicted || missing);
+  docDirtyDot.hidden = !(isDirty() || conflicted || missing);
+  docNameButton.title = missing
+    ? 'Deleted in another tab — press Ctrl+S to save it again'
+    : conflicted
+      ? 'Changed in another tab — press Ctrl+S to resolve'
+      : currentMeta.name
+      ? store.displayName(currentMeta) + ' · Documents (Ctrl+O)'
+      : 'Not saved under a name yet — Ctrl+S to name it';
+}
+
+const docsPanel = createDocsPanel({
+  getActiveId: () => currentMeta.id,
+  flush,
+  notify: showToast,
+  onMetaChanged: () => {
+    const refreshed = store.list().find((m) => m.id === currentMeta.id);
+    if (refreshed) currentMeta = refreshed;
+    updateDocChip();
+  },
+  openDocument: (id) => {
+    flush();
+    const doc = store.get(id);
+    if (!doc) {
+      showToast('That document is no longer available');
+      return;
+    }
+    adoptDocument(doc, 'Opened “' + store.displayName(doc.meta) + '”');
+  },
+  createDocument: () => {
+    flush();
+    try {
+      const meta = store.create({ name: null, text: '' });
+      adoptDocument({ meta, text: '' }, 'New document');
+    } catch (err) {
+      showToast(
+        err instanceof store.QuotaError
+          ? 'Browser storage is full — delete a document first'
+          : 'Could not create a document: ' + (err && err.message ? err.message : err)
+      );
+    }
+  },
+  importFromFile: () => fileInput.click(),
+});
+
+docNameButton.addEventListener('click', () => docsPanel.open());
+btnImport.addEventListener('click', () => fileInput.click());
+
+// A save writes the body and then the metadata, so a watching tab sees two
+// events, and while it processes the first one its cached copy of the other
+// key can still be the old value. `meta.size` is the check that the two halves
+// belong together; when they do not, the read is retried briefly.
+const SYNC_RETRY_DELAY = 60;
+const SYNC_RETRIES = 8;
+
+let syncTimer;
+let syncAttempt = 0;
+
+/** Bring the editor back in line with what storage now holds. */
+function syncActiveFromStorage(hintMeta) {
+  clearTimeout(syncTimer);
+
+  const stored = store.get(currentMeta.id);
+  if (!stored) {
+    missing = true;
+    conflicted = false;
+    updateDocChip();
+    showToast('This document was deleted in another tab — Ctrl+S saves it again');
+    return;
+  }
+  missing = false;
+
+  // The event carries the metadata it changed, which beats a possibly stale
+  // read of that key.
+  const meta =
+    hintMeta && hintMeta.id === currentMeta.id && hintMeta.rev > stored.meta.rev
+      ? hintMeta
+      : stored.meta;
+
+  if (meta.rev <= savedRev) {
+    // Only metadata moved — a rename in the manager, for instance.
+    currentMeta = meta;
+    updateDocChip();
+    return;
+  }
+
+  if (isDirty() || conflicted) {
+    // Never take their text while we hold unsaved edits; Ctrl+S decides.
+    conflicted = true;
+    currentMeta = meta;
+    updateDocChip();
+    showToast('Changed in another tab — press Ctrl+S to resolve');
+    return;
+  }
+
+  if (stored.text.length !== meta.size && syncAttempt < SYNC_RETRIES) {
+    syncAttempt++;
+    syncTimer = setTimeout(() => syncActiveFromStorage(hintMeta), SYNC_RETRY_DELAY);
+    return;
+  }
+
+  adoptDocument({ meta, text: stored.text }, 'Reloaded — changed in another tab');
+}
+
+// Another tab wrote to storage. Nothing in here may write: a write built on a
+// stale read is exactly what would undo the other tab's save.
+store.onExternalChange(({ id, kind, meta }) => {
+  if (kind === 'cleared') {
+    conflicted = true;
+    updateDocChip();
+    docsPanel.refresh();
+    return;
+  }
+
+  if (id === currentMeta.id) {
+    syncAttempt = 0;
+    syncActiveFromStorage(meta);
+  }
+
+  docsPanel.refresh();
+});
+
+window.addEventListener('beforeunload', flush);
 
 // Save editor content as .mmd
 function saveMermaid() {
@@ -152,20 +498,34 @@ function showToast(message) {
   toastTimer = setTimeout(() => toast.classList.remove('visible'), 1800);
 }
 
-// Open .mmd / .txt file
-btnOpen.addEventListener('click', () => fileInput.click());
-
+// Import a .mmd / .txt file from disk as a new untitled document, so it never
+// overwrites whatever is currently open.
 fileInput.addEventListener('change', async (e) => {
   const file = e.target.files[0];
   fileInput.value = '';
   if (!file) return;
+
+  let text;
   try {
-    editor.setValue(await file.text());
+    text = await file.text();
   } catch (err) {
     showToast('Could not read file: ' + (err && err.message ? err.message : err));
     return;
   }
-  renderDiagram();
+
+  flush();
+  try {
+    const meta = store.create({ name: null, text });
+    adoptDocument({ meta, text }, 'Imported ' + file.name);
+    // Ctrl+S will offer the file's name.
+    suggestedName = file.name.replace(/\.[^.]+$/, '');
+  } catch (err) {
+    showToast(
+      err instanceof store.QuotaError
+        ? 'Browser storage is full — delete a document first'
+        : 'Could not import: ' + (err && err.message ? err.message : err)
+    );
+  }
 });
 
 // --- settings ----------------------------------------------------------------
@@ -227,6 +587,8 @@ btnSettings.addEventListener('click', () => settingsPanel.open());
 document.addEventListener('keydown', (e) => {
   const mod = e.ctrlKey || e.metaKey;
   if (!mod) return;
+  // A modal owns the keyboard while it is up.
+  if (isDialogOpen() || docsPanel.isOpen()) return;
 
   // Check Shift+S before plain S
   if (e.shiftKey && e.key.toLowerCase() === 's') {
@@ -237,7 +599,13 @@ document.addEventListener('keydown', (e) => {
 
   if (e.key.toLowerCase() === 's') {
     e.preventDefault();
-    writeToLocalStorage(true);
+    saveExplicit();
+    return;
+  }
+
+  if (e.key.toLowerCase() === 'o') {
+    e.preventDefault();
+    docsPanel.open();
     return;
   }
 
@@ -378,5 +746,6 @@ window.addEventListener('resize', fitToWidth);
 // --- boot --------------------------------------------------------------------
 
 applyAllSettings();
+updateDocChip();
 applyTransform();
 renderDiagram();
