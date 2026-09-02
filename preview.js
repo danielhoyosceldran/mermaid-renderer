@@ -1,6 +1,7 @@
 import mermaid from './vendor/mermaid/mermaid.esm.min.mjs';
 
-mermaid.initialize({ startOnLoad: false });
+// Pinned for the same reason as in app.js: the SVG is injected with innerHTML.
+mermaid.initialize({ startOnLoad: false, securityLevel: 'strict' });
 
 const output = document.getElementById('output');
 const viewport = document.getElementById('viewport');

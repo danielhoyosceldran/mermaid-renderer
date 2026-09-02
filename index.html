@@ -8,6 +8,26 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=JetBrains+Mono:wght@500;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
+  <!-- CodeMirror packages import each other by bare specifier; this maps them
+       onto the vendored copies so the app still runs with no build step. -->
+  <script type="importmap">
+  {
+    "imports": {
+      "@codemirror/state": "./vendor/codemirror/state.js",
+      "@codemirror/view": "./vendor/codemirror/view.js",
+      "@codemirror/language": "./vendor/codemirror/language.js",
+      "@codemirror/commands": "./vendor/codemirror/commands.js",
+      "@codemirror/autocomplete": "./vendor/codemirror/autocomplete.js",
+      "@codemirror/search": "./vendor/codemirror/search.js",
+      "@lezer/common": "./vendor/codemirror/lezer-common.js",
+      "@lezer/highlight": "./vendor/codemirror/lezer-highlight.js",
+      "@marijn/find-cluster-break": "./vendor/codemirror/find-cluster-break.js",
+      "crelt": "./vendor/codemirror/crelt.js",
+      "style-mod": "./vendor/codemirror/style-mod.js",
+      "w3c-keyname": "./vendor/codemirror/w3c-keyname.js"
+    }
+  }
+  </script>
 </head>
 <body>
   <div id="toolbar">
@@ -28,11 +48,7 @@
   </div>
   <div id="main">
     <div id="left-panel">
-      <div id="editor-wrap">
-        <div id="editor-gutter" aria-hidden="true"></div>
-        <pre id="editor-highlight" aria-hidden="true"></pre>
-        <textarea id="editor" spellcheck="false" placeholder="Enter Mermaid diagram code..."></textarea>
-      </div>
+      <div id="editor-host"></div>
     </div>
     <div id="splitter"></div>
     <div id="right-panel">
@@ -40,7 +56,7 @@
         <label id="zoom-speed-label" title="Zoom speed">
           <span>Zoom Speed</span>
           <button id="btn-zoom-speed-down" type="button" title="Decrease zoom speed">−</button>
-          <input id="zoom-speed" type="range" min="0" max="0.6" step="0.01" />
+          <input id="zoom-speed" type="range" min="0.01" max="0.6" step="0.01" />
           <button id="btn-zoom-speed-up" type="button" title="Increase zoom speed">+</button>
           <span id="zoom-speed-value"></span>
         </label>

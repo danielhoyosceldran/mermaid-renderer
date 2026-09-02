@@ -126,76 +126,90 @@ body {
   border-right: none;
 }
 
-#editor-wrap {
-  position: relative;
+#editor-host {
   flex: 1;
+  min-height: 0;
   overflow: hidden;
 }
 
-#editor-highlight,
-#editor {
-  position: absolute;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  left: var(--gutter-width, 0px);
-  margin: 0;
-  padding: 12px;
-  border: none;
+/* CodeMirror owns the editor's layout; these rules only theme it. */
+#editor-host .cm-editor {
+  height: 100%;
   font-family: 'JetBrains Mono', ui-monospace, monospace;
   font-size: 13px;
-  line-height: 1.5;
-  white-space: pre-wrap;
-  word-wrap: break-word;
-  overflow-wrap: break-word;
-  tab-size: inherit;
-}
-
-#editor-wrap.no-wrap #editor-highlight,
-#editor-wrap.no-wrap #editor {
-  white-space: pre;
-  word-wrap: normal;
-  overflow-wrap: normal;
-}
-
-#editor-gutter {
-  position: absolute;
-  top: 0;
-  left: 0;
-  bottom: 0;
-  width: var(--gutter-width, 0px);
-  padding: 12px 6px 12px 0;
-  margin: 0;
-  overflow: hidden;
-  text-align: right;
-  font-family: 'JetBrains Mono', ui-monospace, monospace;
-  font-size: 13px;
-  line-height: 1.5;
-  color: var(--tt-text-dim);
-  user-select: none;
-  pointer-events: none;
-  white-space: pre;
-}
-
-#editor-highlight {
-  z-index: 1;
-  overflow: hidden;
-  pointer-events: none;
   color: var(--tt-text);
+  background: var(--tt-surface);
 }
 
-#editor {
-  z-index: 2;
-  resize: none;
+#editor-host .cm-editor.cm-focused {
   outline: none;
-  overflow: auto;
-  background: transparent;
-  color: transparent;
+}
+
+#editor-host .cm-scroller {
+  font-family: inherit;
+  line-height: 1.5;
+}
+
+#editor-host .cm-content {
+  padding: 12px 0;
   caret-color: var(--tt-text);
 }
 
-#editor::selection {
+#editor-host .cm-line {
+  padding: 0 12px;
+}
+
+#editor-host .cm-gutters {
+  padding-left: 4px;
+  color: var(--tt-text-dim);
+  background: var(--tt-surface);
+  border-right: 1px solid var(--tt-border-soft);
+}
+
+#editor-host .cm-lineNumbers .cm-gutterElement {
+  min-width: 2ch;
+  padding: 0 6px 0 4px;
+}
+
+#editor-host .cm-activeLine {
+  background: rgba(99, 102, 241, 0.06);
+}
+
+#editor-host .cm-activeLineGutter {
+  background: transparent;
+  color: var(--tt-text-muted);
+}
+
+#editor-host .cm-cursor,
+#editor-host .cm-dropCursor {
+  border-left-color: var(--tt-text);
+}
+
+#editor-host .cm-selectionBackground,
+#editor-host .cm-focused .cm-selectionBackground,
+#editor-host .cm-content ::selection {
   background: rgba(99, 102, 241, 0.35);
+}
+
+#editor-host .cm-selectionMatch {
+  background: rgba(99, 102, 241, 0.14);
+}
+
+#editor-host .cm-matchingBracket,
+#editor-host .cm-focused .cm-matchingBracket {
+  background: rgba(99, 102, 241, 0.18);
+  outline: none;
+}
+
+#editor-host .cm-placeholder {
+  color: var(--tt-text-dim);
+}
+
+/* <br> preview: a generated newline after the tag, so the extra visual row is
+   plain layout and every position still maps to real text. */
+#editor-host .cm-br-break::after {
+  content: '\A';
+  white-space: pre;
 }
 
 .tok-keyword { color: #9333ea; }
@@ -496,13 +510,9 @@ body {
   transform: translateX(-50%) translateY(0);
 }
 
-#autocomplete {
-  position: fixed;
-  z-index: 900;
+.cm-tooltip.cm-tooltip-autocomplete {
   min-width: 220px;
   max-width: 420px;
-  max-height: 15rem;
-  overflow-y: auto;
   padding: 4px;
   background: var(--tt-surface);
   border: 1px solid var(--tt-border);
@@ -512,37 +522,39 @@ body {
   font-size: 12px;
 }
 
-#autocomplete[hidden] {
-  display: none;
+.cm-tooltip-autocomplete > ul {
+  max-height: 15rem;
+  font-family: inherit;
 }
 
-.ac-item {
+.cm-tooltip-autocomplete > ul > li {
   display: flex;
   align-items: baseline;
   gap: 10px;
   padding: 4px 8px;
   border-radius: 5px;
-  cursor: pointer;
-  white-space: nowrap;
-}
-
-.ac-item.selected {
-  background: var(--tt-accent);
-}
-
-.ac-label {
   color: var(--tt-text);
 }
 
-.ac-detail {
+.cm-tooltip-autocomplete > ul > li[aria-selected] {
+  background: var(--tt-accent);
+  color: #fff;
+}
+
+.cm-tooltip-autocomplete .cm-completionDetail {
   margin-left: auto;
   font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  font-style: normal;
   color: var(--tt-text-dim);
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.ac-item.selected .ac-label,
-.ac-item.selected .ac-detail {
+.cm-tooltip-autocomplete > ul > li[aria-selected] .cm-completionDetail {
   color: #fff;
+}
+
+.cm-tooltip-autocomplete .cm-completionMatchedText {
+  text-decoration: none;
+  font-weight: 700;
 }
