@@ -96,6 +96,26 @@ The rest of the safety net:
 * When the browser refuses to store (quota, private mode), the editor says so
   and keeps the text; `Ctrl+Shift+S` is the way out to a file.
 
+## Release notes
+
+[release-notes.json](release-notes.json) holds the releases, newest first:
+
+```json
+[
+  { "version": "1", "date": "2026-09-04", "notes": ["...", "..."] }
+]
+```
+
+The bell in the toolbar opens the full history and carries a dot while there is
+something unread. On load, anything newer than the last release the user read
+is shown once in a popup. Two `localStorage` keys track that:
+`mermaid-renderer:release-notes-last-seen` (the version last read) and
+`mermaid-renderer:release-notes-latest-available` (the newest one on disk).
+Unread means "above the last-read entry in the list", so **publishing a release
+is just prepending an entry to the JSON** — no version comparison is involved,
+and a rewritten file with unknown versions simply shows everything as new. If
+the file cannot be fetched the bell hides itself and the app carries on.
+
 Everything under Settings → Shortcuts is rebindable (duplicate line, move line,
 comment, delete line, indent/outdent, …). The toolbar also has `Wrap`,
 `<br> wrap` (renders `<br>` as a visual line break, display only) and

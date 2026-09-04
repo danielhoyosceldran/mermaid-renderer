@@ -1,0 +1,25 @@
+[
+  {
+    "version": "1",
+    "date": "2026-09-04",
+    "notes": [
+      "The editor is now CodeMirror 6: syntax colours, line numbers and the suggestion popup can no longer drift out of line with the text you typed",
+      "'<br> wrap' works properly at last — the caret, selection and line numbers all stay correct on the extra visual rows",
+      "Suggestions can no longer wipe out a chunk of the diagram if you move the caret with the mouse while the list is open",
+      "New for free from the editor: find and replace (Ctrl+F), reliable undo / redo, bracket matching and multiple cursors",
+      "Accented, CJK and emoji input now behave: IME composition is no longer swallowed and deleting backwards over an emoji no longer splits it in half",
+      "Named documents in the browser: a diagram starts as Untitled and autosaves, the first Ctrl+S asks for a name, and both autosave and Ctrl+S keep writing to it from then on",
+      "New documents manager (the name chip in the toolbar, or Ctrl+O): create, open, rename, duplicate and delete your saved diagrams",
+      "Autosave is real now — until this release only Ctrl+S wrote anything, so closing the tab lost whatever came after it",
+      "'Import' loads a .mmd file as its own new document instead of overwriting the one you have open",
+      "Each tab remembers its own document, so you can edit two diagrams side by side; if another tab saves the same one you are warned and asked which version to keep instead of silently losing work",
+      "The diagram can no longer end up showing an older render than the code in the editor",
+      "'Reset defaults' now actually re-applies word wrap, <br> wrap and suggestions instead of only changing the buttons",
+      "Tab honours the 'insert spaces' setting and the configured tab size",
+      "Zoom speed can no longer be set to 0, which used to leave zooming permanently dead",
+      "Exporting to .mmd no longer risks the download being cancelled, and failed saves and unreadable files now tell you what happened",
+      "An empty comment token no longer strips indentation instead of commenting",
+      "Mermaid's strict security level is now set explicitly rather than relied on by default"
+    ]
+  }
+]

@@ -5,6 +5,7 @@ import { createEditor } from './cm-editor.js';
 import * as store from './doc-store.js';
 import { createDocsPanel } from './docs-panel.js';
 import { askChoice, askText, isDialogOpen } from './dialogs.js';
+import { createReleaseNotes } from './release-notes.js';
 
 // securityLevel is pinned rather than left to mermaid's default, because the
 // rendered SVG is injected with innerHTML below.
@@ -34,6 +35,7 @@ const zoomSpeedValue = document.getElementById('zoom-speed-value');
 const btnZoomSpeedDown = document.getElementById('btn-zoom-speed-down');
 const btnZoomSpeedUp = document.getElementById('btn-zoom-speed-up');
 const btnPopout = document.getElementById('btn-popout');
+const btnWhatsNew = document.getElementById('btn-whats-new');
 
 const DEFAULT_DIAGRAM = `graph TD
     A[Start] --> B{Is it working?}
@@ -144,6 +146,8 @@ function scheduleRender() {
   clearTimeout(debounceTimer);
   debounceTimer = setTimeout(renderDiagram, 400);
 }
+
+const releaseNotes = createReleaseNotes({ button: btnWhatsNew });
 
 btnPopout.addEventListener('click', () => {
   window.open('preview.html', 'mermaid-preview', 'width=800,height=600');
@@ -588,7 +592,7 @@ document.addEventListener('keydown', (e) => {
   const mod = e.ctrlKey || e.metaKey;
   if (!mod) return;
   // A modal owns the keyboard while it is up.
-  if (isDialogOpen() || docsPanel.isOpen()) return;
+  if (isDialogOpen() || docsPanel.isOpen() || releaseNotes.isOpen()) return;
 
   // Check Shift+S before plain S
   if (e.shiftKey && e.key.toLowerCase() === 's') {
